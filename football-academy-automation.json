@@ -1,0 +1,249 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "أنت مساعد إداري ذكي ومحترف لأكاديمية كرة القدم. مهمتك هي قراءة الجمل بالدارجة المغربية واستخراج معلومات الدفع بدقة عالية.\n\nركز جيداً وفكك المعلومات بناءً على الشروط التالية:\n1. first_name: الاسم الشخصي (السمية) للطفل أو اللاعب.\n2. last_name: الاسم العائلي (الكنية).\n3. amount: المبلغ المدفوع (أرقام فقط).\n4. date: تاريخ اليوم الحالي تلقائياً وهو: 2026-07-18.\n5. expiry_date: تاريخ انتهاء الاشتراك، قم بحسابه تلقائياً بإضافة شهر كامل (30 يوماً) على تاريخ اليوم الحالي، ليكون الناتج دائماً هو: 2026-08-17.\n\nقم بإرجاع النتيجة على شكل JSON واضح فقط يحتوي على هذه الخانات الخمسة، دون أي كلام زائد."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5146f71b-8fbb-4367-ac24-13ec4c86948c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        224,
+        208
+      ],
+      "id": "f54beee1-9d95-4a33-b4a3-a7dfdc60a879",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "2866a918-d813-469a-9aa7-a887f81a3206",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "c7StISDmkfXqK71o",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        16
+      ],
+      "id": "552abce5-9e38-4494-9580-df54abc6cbc9",
+      "name": "When chat message received",
+      "webhookId": "636188e0-4ca6-4ff0-9741-4b4b72ae80b4"
+    },
+    {
+      "parameters": {
+        "jsCode": "let rawText = $input.item.json.output;\nrawText = rawText.replace(/```json|```/g, '').trim();\n\nlet cleanJson = {};\ntry {\n    cleanJson = JSON.parse(rawText);\n} catch (e) {\n    // إذا وقع خطأ في القراءة\n    cleanJson = {};\n}\n\n// هنا الكود غايتأكد من تاريخ انتهاء الاشتراك، وإلا مالقاهش غايحسبو بوحدو\nif (!cleanJson.expiry_date) {\n    let today = new Date(\"2026-07-18\"); // تاريخ اليوم الحالي\n    today.setMonth(today.getMonth() + 1); // زيادة شهر كامل\n    cleanJson.expiry_date = today.toISOString().split('T')[0];\n}\n\nreturn { json: cleanJson };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        48
+      ],
+      "id": "14e333f1-a82d-4592-bac1-05a8c2dd95bd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1SQ1YRULkzE5gGMA8qpF4islOf_wsckc4dxdVJv-t6MU",
+          "mode": "list",
+          "cachedResultName": "Academy_Registrations",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SQ1YRULkzE5gGMA8qpF4islOf_wsckc4dxdVJv-t6MU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SQ1YRULkzE5gGMA8qpF4islOf_wsckc4dxdVJv-t6MU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            " الاسم": "={{ $json.first_name }}",
+            "الكنية": "={{ $json.last_name }}",
+            "المبلغ": "={{ $json.amount }}",
+            "التاريخ": "={{ $json.date }}",
+            "تاريخ انتهاء الاشتراك": "={{ $json.expiry_date }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": " الاسم",
+              "displayName": " الاسم",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "الكنية",
+              "displayName": "الكنية",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "المبلغ",
+              "displayName": "المبلغ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "التاريخ",
+              "displayName": "التاريخ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "تاريخ انتهاء الاشتراك",
+              "displayName": "تاريخ انتهاء الاشتراك",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        64
+      ],
+      "id": "f039e685-0333-4871-b28e-2d86b5328614",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "R2u1AbszZfusswKB",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f99986b1-3340-4296-b116-d2423824373e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "133172e17533584f734c79a6391aa0e2d1351b01fb58102b975c24ea0d0f5ce7"
+  },
+  "nodeGroups": [],
+  "id": "AjG37QYdKdF70BW1",
+  "tags": []
+}
